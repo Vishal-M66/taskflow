@@ -1,0 +1,9 @@
+# Netlify config — deploys the public/ folder as a static site
+[build]
+  publish = "public"
+
+# Redirect all routes to index.html (SPA fallback)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

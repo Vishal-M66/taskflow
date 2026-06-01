@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TaskFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d0f;--bg2:#161618;--bg3:#1e1e21;--bg4:#26262a;
+  --border:#2e2e33;--border2:#3a3a40;
+  --text:#f0f0f2;--text2:#9898a8;--text3:#5a5a6a;
+  --accent:#7c6dfa;--accent2:#a08ffc;--accent-bg:rgba(124,109,250,0.12);
+  --todo:#f59e0b;--todo-bg:rgba(245,158,11,0.1);
+  --prog:#3b82f6;--prog-bg:rgba(59,130,246,0.1);
+  --done:#10b981;--done-bg:rgba(16,185,129,0.1);
+  --red:#ef4444;--red-bg:rgba(239,68,68,0.1);
+  --r:10px;--r2:16px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea{font-family:'DM Sans',sans-serif}
+
+/* ── Auth ── */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+.auth-card{width:100%;max-width:420px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:2.5rem}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:2rem}
+.auth-logo-icon{width:38px;height:38px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px}
+.auth-logo-text{font-size:22px;font-weight:600;letter-spacing:-0.5px}
+.auth-title{font-size:24px;font-weight:600;margin-bottom:.4rem}
+.auth-sub{color:var(--text2);font-size:14px;margin-bottom:2rem}
+.field{margin-bottom:1.25rem}
+.field label{display:block;font-size:13px;color:var(--text2);margin-bottom:.5rem;font-weight:500}
+.field input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:.75rem 1rem;font-size:14px;color:var(--text);outline:none;transition:border-color .2s}
+.field input:focus{border-color:var(--accent)}
+.field input::placeholder{color:var(--text3)}
+.btn-primary{width:100%;background:var(--accent);color:#fff;border-radius:var(--r);padding:.8rem 1rem;font-size:14px;font-weight:600;transition:all .2s;margin-top:.5rem;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary:hover:not(:disabled){background:var(--accent2)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.auth-switch{text-align:center;margin-top:1.5rem;font-size:13px;color:var(--text2)}
+.auth-switch a{color:var(--accent2);cursor:pointer;font-weight:500;text-decoration:underline}
+.err{background:var(--red-bg);border:1px solid rgba(239,68,68,0.2);color:#fca5a5;border-radius:8px;padding:.65rem 1rem;font-size:13px;margin-bottom:1rem}
+.success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#6ee7b7;border-radius:8px;padding:.65rem 1rem;font-size:13px;margin-bottom:1rem}
+
+/* ── App Shell ── */
+.app{display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:50}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-logo{width:30px;height:30px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+.topbar-name{font-size:16px;font-weight:600}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.user-pill{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:24px;padding:.35rem .75rem .35rem .5rem;font-size:13px;color:var(--text2)}
+.avatar{width:24px;height:24px;border-radius:50%;background:var(--accent-bg);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent2)}
+.btn-logout{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:.4rem .75rem;font-size:13px;color:var(--text2);display:flex;align-items:center;gap:6px;transition:all .2s;cursor:pointer}
+.btn-logout:hover{border-color:var(--border2);color:var(--text)}
+
+/* ── Board ── */
+.board-wrap{flex:1;padding:2rem;overflow-x:auto}
+.board-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem}
+.board-title{font-size:26px;font-weight:600;letter-spacing:-0.6px}
+.board-subtitle{font-size:14px;color:var(--text2);margin-top:.2rem}
+.btn-add{display:flex;align-items:center;gap:8px;background:var(--accent);color:#fff;border-radius:var(--r);padding:.6rem 1.1rem;font-size:14px;font-weight:600;transition:all .2s;cursor:pointer;border:none}
+.btn-add:hover{background:var(--accent2)}
+
+/* ── Stats ── */
+.stats{display:flex;gap:.75rem;margin-bottom:1.75rem;flex-wrap:wrap}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:.75rem 1.25rem;display:flex;align-items:center;gap:.75rem}
+.stat-num{font-size:22px;font-weight:600;font-family:'DM Mono',monospace}
+.stat-label{font-size:12px;color:var(--text2)}
+.stat-icon{font-size:20px}
+
+/* ── Kanban ── */
+.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;min-width:680px}
+.col{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);display:flex;flex-direction:column;min-height:400px}
+.col-header{padding:1rem 1.25rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.col-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.col-title{font-size:14px;font-weight:600;flex:1}
+.col-count{background:var(--bg4);border:1px solid var(--border);border-radius:20px;padding:.1rem .5rem;font-size:12px;color:var(--text2)}
+.col-body{flex:1;padding:1rem;display:flex;flex-direction:column;gap:.75rem}
+
+/* ── Task Cards ── */
+.task-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:1rem;transition:all .2s;position:relative}
+.task-card:hover{border-color:var(--border2);background:var(--bg4)}
+.task-title{font-size:14px;font-weight:500;line-height:1.4;margin-bottom:.5rem}
+.task-desc{font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:.75rem}
+.task-footer{display:flex;align-items:center;justify-content:space-between}
+.task-date{font-size:11px;color:var(--text3)}
+.task-actions{display:flex;gap:4px;opacity:0;transition:opacity .2s}
+.task-card:hover .task-actions{opacity:1}
+.task-btn{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;cursor:pointer;border:none;background:var(--bg2);color:var(--text2)}
+.task-btn.edit:hover{color:var(--accent2);background:var(--accent-bg)}
+.task-btn.del:hover{color:#fca5a5;background:var(--red-bg)}
+
+/* ── Empty ── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;color:var(--text3);font-size:13px;gap:8px;padding:2rem 0;text-align:center}
+.empty i{font-size:32px;opacity:.4}
+
+/* ── Loading spinner ── */
+.page-loading{min-height:100vh;display:flex;align-items:center;justify-content:center;gap:12px;color:var(--text2);font-size:14px}
+.spin{width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.btn-spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Modals ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:100;padding:1rem}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);width:100%;max-width:480px;padding:2rem;position:relative}
+.modal-title{font-size:20px;font-weight:600;margin-bottom:.3rem}
+.modal-sub{font-size:13px;color:var(--text2);margin-bottom:1.75rem}
+.modal-close{position:absolute;top:1.25rem;right:1.25rem;width:32px;height:32px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text2);cursor:pointer;transition:all .2s}
+.modal-close:hover{color:var(--text)}
+.modal textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:.75rem 1rem;font-size:14px;color:var(--text);outline:none;resize:none;min-height:80px;transition:border-color .2s}
+.modal textarea:focus{border-color:var(--accent)}
+.modal textarea::placeholder{color:var(--text3)}
+.stage-select{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-top:.5rem}
+.stage-opt{padding:.65rem;border:1px solid var(--border);border-radius:var(--r);font-size:12px;font-weight:600;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg3);color:var(--text2)}
+.stage-opt:hover{border-color:var(--border2)}
+.stage-opt.active-todo{background:var(--todo-bg);border-color:var(--todo);color:var(--todo)}
+.stage-opt.active-prog{background:var(--prog-bg);border-color:var(--prog);color:var(--prog)}
+.stage-opt.active-done{background:var(--done-bg);border-color:var(--done);color:var(--done)}
+.modal-actions{display:flex;gap:.75rem;margin-top:1.5rem}
+.btn-cancel{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:.75rem;font-size:14px;font-weight:500;color:var(--text2);transition:all .2s;cursor:pointer}
+.btn-cancel:hover{color:var(--text)}
+.btn-save{flex:2;background:var(--accent);color:#fff;border-radius:var(--r);padding:.75rem;font-size:14px;font-weight:600;transition:all .2s;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-save:hover:not(:disabled){background:var(--accent2)}
+.btn-save:disabled{opacity:.5;cursor:not-allowed}
+.confirm{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);width:100%;max-width:360px;padding:1.75rem}
+.confirm-icon{width:44px;height:44px;background:var(--red-bg);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--red);margin-bottom:1rem}
+.confirm-title{font-size:17px;font-weight:600;margin-bottom:.3rem}
+.confirm-msg{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:1.25rem}
+.btn-del{flex:2;background:var(--red);color:#fff;border-radius:var(--r);padding:.7rem;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-del:hover:not(:disabled){background:#f87171}
+.btn-del:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── API status banner ── */
+.api-banner{background:rgba(245,158,11,0.08);border-bottom:1px solid rgba(245,158,11,0.2);padding:.6rem 2rem;font-size:12px;color:var(--todo);display:flex;align-items:center;gap:8px}
+
+@media(max-width:700px){
+  .kanban{grid-template-columns:1fr;min-width:unset}
+  .board-wrap{padding:1rem}
+  .topbar{padding:0 1rem}
+  .api-banner{padding:.6rem 1rem}
+}
+</style>
+</head>
+<body>
+<div id="root"><div class="page-loading"><div class="spin"></div> Loading TaskFlow…</div></div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────
+// When running via "npm start", the backend serves this file so API calls
+// ── CONFIGURE THIS ──────────────────────────────────────────────────────
+// If deploying frontend separately (e.g. Netlify), set this to your
+// backend URL e.g. 'https://taskflow-api.railway.app/api'
+// If running locally via `npm start`, leave as is.
+const BACKEND_URL = '';  // ← paste your Railway/Render URL here if needed
+
+const API_BASE = BACKEND_URL
+  ? BACKEND_URL.replace(/\/$/, '') + '/api'
+  : window.location.protocol === 'file:'
+    ? 'http://localhost:4000/api'
+    : '/api';
+
+// ── State ────────────────────────────────────────────────────────────────
+let state = {
+  view: 'loading',   // loading | login | register | app
+  user: null,
+  token: null,
+  tasks: [],
+  modal: null,       // null | { mode: 'create'|'edit', task }
+  confirm: null,     // null | task object
+  apiOnline: true,
+};
+
+// ── Token helpers ─────────────────────────────────────────────────────────
+function saveToken(token) { localStorage.setItem('tf_token', token); }
+function loadToken() { return localStorage.getItem('tf_token'); }
+function clearToken() { localStorage.removeItem('tf_token'); }
+
+// ── API helpers ───────────────────────────────────────────────────────────
+async function apiFetch(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  if (state.token) headers['Authorization'] = `Bearer ${state.token}`;
+  const res = await fetch(API_BASE + path, { ...options, headers });
+  const data = await res.json().catch(() => ({ error: 'Invalid server response.' }));
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  return data;
+}
+
+async function checkApiHealth() {
+  try {
+    await fetch(API_BASE + '/health');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ── Auth actions ──────────────────────────────────────────────────────────
+async function doLogin(email, pass) {
+  const data = await apiFetch('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password: pass })
+  });
+  saveToken(data.token);
+  state.token = data.token;
+  const tasks = await apiFetch('/tasks');
+  setState({ view: 'app', user: data.user, tasks: tasks.tasks });
+}
+
+async function doRegister(name, email, pass) {
+  const data = await apiFetch('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ name, email, password: pass })
+  });
+  saveToken(data.token);
+  state.token = data.token;
+  setState({ view: 'app', user: data.user, tasks: [] });
+}
+
+function doLogout() {
+  clearToken();
+  setState({ view: 'login', user: null, token: null, tasks: [], modal: null, confirm: null });
+}
+
+// ── Task actions ──────────────────────────────────────────────────────────
+async function doCreateTask(title, desc, stage) {
+  const data = await apiFetch('/tasks', {
+    method: 'POST',
+    body: JSON.stringify({ title, description: desc, stage })
+  });
+  setState({ tasks: [data.task, ...state.tasks], modal: null });
+}
+
+async function doUpdateTask(id, title, desc, stage) {
+  const data = await apiFetch(`/tasks/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ title, description: desc, stage })
+  });
+  setState({ tasks: state.tasks.map(t => t.id === id ? data.task : t), modal: null });
+}
+
+async function doDeleteTask(id) {
+  await apiFetch(`/tasks/${id}`, { method: 'DELETE' });
+  setState({ tasks: state.tasks.filter(t => t.id !== id), confirm: null });
+}
+
+// ── Render ────────────────────────────────────────────────────────────────
+function setState(patch) { Object.assign(state, patch); render(); }
+
+function fmt(ms) {
+  if (!ms) return '';
+  return new Date(ms).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+}
+function initials(name) {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+// ── Auth Screen ───────────────────────────────────────────────────────────
+function renderAuth(mode) {
+  const isReg = mode === 'register';
+  const wrap = document.createElement('div');
+  wrap.className = 'auth-wrap';
+  wrap.innerHTML = `
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-logo-icon"><i class="ti ti-checks"></i></div>
+        <div class="auth-logo-text">TaskFlow</div>
+      </div>
+      <h1 class="auth-title">${isReg ? 'Create account' : 'Welcome back'}</h1>
+      <p class="auth-sub">${isReg ? 'Start organizing your tasks today.' : 'Sign in to continue to your board.'}</p>
+      ${!state.apiOnline ? `<div class="err"><i class="ti ti-wifi-off"></i> Backend is offline. Start the server with <code>npm start</code>.</div>` : ''}
+      <div id="auth-msg"></div>
+      ${isReg ? `<div class="field"><label>Full name</label><input id="f-name" type="text" placeholder="Your name" /></div>` : ''}
+      <div class="field"><label>Email</label><input id="f-email" type="email" placeholder="you@example.com" /></div>
+      <div class="field"><label>Password</label><input id="f-pass" type="password" placeholder="••••••••" /></div>
+      <button class="btn-primary" id="auth-btn">
+        <span id="auth-btn-label">${isReg ? 'Create account' : 'Sign in'}</span>
+      </button>
+      <p class="auth-switch">${isReg ? 'Already have an account? ' : 'No account? '}
+        <a id="switch-link">${isReg ? 'Sign in' : 'Register'}</a>
+      </p>
+    </div>`;
+
+  const btn = wrap.querySelector('#auth-btn');
+  const msgEl = wrap.querySelector('#auth-msg');
+
+  function showMsg(html, type = 'err') {
+    msgEl.innerHTML = `<div class="${type}">${html}</div>`;
+  }
+
+  btn.addEventListener('click', async () => {
+    const email = wrap.querySelector('#f-email')?.value.trim();
+    const pass  = wrap.querySelector('#f-pass')?.value;
+    const name  = wrap.querySelector('#f-name')?.value.trim();
+
+    if (!email || !pass || (isReg && !name)) {
+      showMsg('All fields are required.'); return;
+    }
+    if (isReg && pass.length < 6) {
+      showMsg('Password must be at least 6 characters.'); return;
+    }
+
+    btn.disabled = true;
+    wrap.querySelector('#auth-btn-label').innerHTML = `<div class="btn-spin"></div> ${isReg ? 'Creating…' : 'Signing in…'}`;
+
+    try {
+      if (isReg) await doRegister(name, email, pass);
+      else       await doLogin(email, pass);
+    } catch (err) {
+      showMsg(err.message);
+      btn.disabled = false;
+      wrap.querySelector('#auth-btn-label').textContent = isReg ? 'Create account' : 'Sign in';
+    }
+  });
+
+  // Allow Enter key
+  wrap.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') btn.click(); });
+  });
+
+  wrap.querySelector('#switch-link').addEventListener('click', () => {
+    setState({ view: isReg ? 'login' : 'register' });
+  });
+
+  return wrap;
+}
+
+// ── App Board ─────────────────────────────────────────────────────────────
+function renderApp() {
+  const todos = state.tasks.filter(t => t.stage === 'todo');
+  const progs = state.tasks.filter(t => t.stage === 'progress');
+  const dones = state.tasks.filter(t => t.stage === 'done');
+  const pct   = state.tasks.length ? Math.round(dones.length / state.tasks.length * 100) : 0;
+
+  const root = document.createElement('div');
+  root.className = 'app';
+
+  // Topbar
+  const topbar = document.createElement('div');
+  topbar.className = 'topbar';
+  topbar.innerHTML = `
+    <div class="topbar-left">
+      <div class="topbar-logo"><i class="ti ti-checks"></i></div>
+      <div class="topbar-name">TaskFlow</div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-pill">
+        <div class="avatar">${initials(state.user.name)}</div>
+        ${state.user.name.split(' ')[0]}
+      </div>
+      <button class="btn-logout" id="logout-btn">
+        <i class="ti ti-logout"></i> Sign out
+      </button>
+    </div>`;
+  topbar.querySelector('#logout-btn').addEventListener('click', doLogout);
+  root.appendChild(topbar);
+
+  // API offline banner
+  if (!state.apiOnline) {
+    const banner = document.createElement('div');
+    banner.className = 'api-banner';
+    banner.innerHTML = `<i class="ti ti-alert-triangle"></i> Backend offline — changes won't be saved until server is running.`;
+    root.appendChild(banner);
+  }
+
+  // Board
+  const board = document.createElement('div');
+  board.className = 'board-wrap';
+  board.innerHTML = `
+    <div class="board-header">
+      <div>
+        <div class="board-title">My Board</div>
+        <div class="board-subtitle">${state.tasks.length} task${state.tasks.length !== 1 ? 's' : ''} · ${pct}% complete</div>
+      </div>
+      <button class="btn-add" id="new-task-btn"><i class="ti ti-plus"></i> New Task</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><i class="ti ti-list-check stat-icon" style="color:var(--text2)"></i><div><div class="stat-num">${state.tasks.length}</div><div class="stat-label">Total</div></div></div>
+      <div class="stat"><i class="ti ti-clock stat-icon" style="color:var(--todo)"></i><div><div class="stat-num">${todos.length}</div><div class="stat-label">To Do</div></div></div>
+      <div class="stat"><i class="ti ti-loader stat-icon" style="color:var(--prog)"></i><div><div class="stat-num">${progs.length}</div><div class="stat-label">In Progress</div></div></div>
+      <div class="stat"><i class="ti ti-circle-check stat-icon" style="color:var(--done)"></i><div><div class="stat-num">${dones.length}</div><div class="stat-label">Done</div></div></div>
+    </div>
+    <div class="kanban" id="kanban"></div>`;
+
+  board.querySelector('#new-task-btn').addEventListener('click', () => {
+    setState({ modal: { mode: 'create', task: null } });
+  });
+
+  // Columns
+  const kanban = board.querySelector('#kanban');
+  [
+    { title: 'To Do',       dot: 'var(--todo)', tasks: todos },
+    { title: 'In Progress', dot: 'var(--prog)', tasks: progs },
+    { title: 'Done',        dot: 'var(--done)', tasks: dones },
+  ].forEach(({ title, dot, tasks }) => {
+    const col = document.createElement('div');
+    col.className = 'col';
+    col.innerHTML = `
+      <div class="col-header">
+        <div class="col-dot" style="background:${dot}"></div>
+        <div class="col-title">${title}</div>
+        <div class="col-count">${tasks.length}</div>
+      </div>`;
+    const body = document.createElement('div');
+    body.className = 'col-body';
+    if (tasks.length === 0) {
+      body.innerHTML = `<div class="empty"><i class="ti ti-clipboard"></i><span>No tasks here</span></div>`;
+    } else {
+      tasks.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'task-card';
+        card.innerHTML = `
+          <div class="task-title">${escHtml(t.title)}</div>
+          ${t.description ? `<div class="task-desc">${escHtml(t.description)}</div>` : ''}
+          <div class="task-footer">
+            <span class="task-date">${fmt(t.created_at)}</span>
+            <div class="task-actions">
+              <button class="task-btn edit" title="Edit"><i class="ti ti-pencil"></i></button>
+              <button class="task-btn del"  title="Delete"><i class="ti ti-trash"></i></button>
+            </div>
+          </div>`;
+        card.querySelector('.edit').addEventListener('click', e => {
+          e.stopPropagation();
+          setState({ modal: { mode: 'edit', task: t } });
+        });
+        card.querySelector('.del').addEventListener('click', e => {
+          e.stopPropagation();
+          setState({ confirm: t });
+        });
+        body.appendChild(card);
+      });
+    }
+    col.appendChild(body);
+    kanban.appendChild(col);
+  });
+
+  root.appendChild(board);
+
+  // Task modal
+  if (state.modal) root.appendChild(renderModal());
+
+  // Confirm delete modal
+  if (state.confirm) root.appendChild(renderConfirm());
+
+  return root;
+}
+
+// ── Task Modal ────────────────────────────────────────────────────────────
+function renderModal() {
+  const { mode, task } = state.modal;
+  let titleV = task?.title || '';
+  let descV  = task?.description || '';
+  let stageV = task?.stage || 'todo';
+  const stageClass = { todo: 'active-todo', progress: 'active-prog', done: 'active-done' };
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.addEventListener('click', e => { if (e.target === overlay) setState({ modal: null }); });
+
+  overlay.innerHTML = `
+    <div class="modal">
+      <button class="modal-close" id="modal-close"><i class="ti ti-x"></i></button>
+      <h2 class="modal-title">${mode === 'create' ? 'New task' : 'Edit task'}</h2>
+      <p class="modal-sub">${mode === 'create' ? 'Add a new task to your board.' : 'Update the task details below.'}</p>
+      <div id="modal-err"></div>
+      <div class="field">
+        <label>Title</label>
+        <input id="m-title" type="text" placeholder="What needs to be done?" value="${escAttr(titleV)}" />
+      </div>
+      <div class="field">
+        <label>Description</label>
+        <textarea id="m-desc" placeholder="Add a description (optional)…">${escHtml(descV)}</textarea>
+      </div>
+      <div class="field">
+        <label>Stage</label>
+        <div class="stage-select">
+          <button class="stage-opt ${stageV==='todo'?'active-todo':''}"     data-stage="todo">📋 To Do</button>
+          <button class="stage-opt ${stageV==='progress'?'active-prog':''}" data-stage="progress">⚡ In Progress</button>
+          <button class="stage-opt ${stageV==='done'?'active-done':''}"     data-stage="done">✅ Done</button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="modal-cancel">Cancel</button>
+        <button class="btn-save"   id="modal-save">
+          <span id="modal-save-label">${mode === 'create' ? 'Create task' : 'Save changes'}</span>
+        </button>
+      </div>
+    </div>`;
+
+  overlay.querySelector('#modal-close').addEventListener('click',  () => setState({ modal: null }));
+  overlay.querySelector('#modal-cancel').addEventListener('click', () => setState({ modal: null }));
+  overlay.querySelector('#m-title').addEventListener('input', e => titleV = e.target.value);
+  overlay.querySelector('#m-desc').addEventListener('input',  e => descV  = e.target.value);
+
+  overlay.querySelectorAll('.stage-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      stageV = btn.dataset.stage;
+      overlay.querySelectorAll('.stage-opt').forEach(b => b.className = 'stage-opt');
+      btn.className = `stage-opt ${stageClass[stageV]}`;
+    });
+  });
+
+  const saveBtn   = overlay.querySelector('#modal-save');
+  const saveLabel = overlay.querySelector('#modal-save-label');
+  const errEl     = overlay.querySelector('#modal-err');
+
+  saveBtn.addEventListener('click', async () => {
+    if (!titleV.trim()) {
+      errEl.innerHTML = `<div class="err">Title is required.</div>`; return;
+    }
+    saveBtn.disabled = true;
+    saveLabel.innerHTML = `<div class="btn-spin"></div> Saving…`;
+    try {
+      if (mode === 'create') await doCreateTask(titleV.trim(), descV.trim(), stageV);
+      else                   await doUpdateTask(task.id, titleV.trim(), descV.trim(), stageV);
+    } catch (err) {
+      errEl.innerHTML = `<div class="err">${err.message}</div>`;
+      saveBtn.disabled = false;
+      saveLabel.textContent = mode === 'create' ? 'Create task' : 'Save changes';
+    }
+  });
+
+  return overlay;
+}
+
+// ── Confirm Delete Modal ──────────────────────────────────────────────────
+function renderConfirm() {
+  const t = state.confirm;
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.addEventListener('click', e => { if (e.target === overlay) setState({ confirm: null }); });
+  overlay.innerHTML = `
+    <div class="confirm">
+      <div class="confirm-icon"><i class="ti ti-trash"></i></div>
+      <div class="confirm-title">Delete task?</div>
+      <div class="confirm-msg">"${escHtml(t.title)}" will be permanently removed from the database.</div>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="c-cancel">Cancel</button>
+        <button class="btn-del" id="c-del"><span id="del-label">Delete task</span></button>
+      </div>
+    </div>`;
+  overlay.querySelector('#c-cancel').addEventListener('click', () => setState({ confirm: null }));
+  const delBtn   = overlay.querySelector('#c-del');
+  const delLabel = overlay.querySelector('#del-label');
+  delBtn.addEventListener('click', async () => {
+    delBtn.disabled = true;
+    delLabel.innerHTML = `<div class="btn-spin"></div> Deleting…`;
+    try {
+      await doDeleteTask(t.id);
+    } catch (err) {
+      alert(err.message);
+      delBtn.disabled = false;
+      delLabel.textContent = 'Delete task';
+    }
+  });
+  return overlay;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escAttr(s) {
+  return String(s).replace(/"/g,'&quot;');
+}
+
+// ── Main render ───────────────────────────────────────────────────────────
+function render() {
+  const root = document.getElementById('root');
+  root.innerHTML = '';
+  if (state.view === 'loading') {
+    root.innerHTML = `<div class="page-loading"><div class="spin"></div> Loading…</div>`;
+    return;
+  }
+  if (state.view === 'login')    { root.appendChild(renderAuth('login'));    return; }
+  if (state.view === 'register') { root.appendChild(renderAuth('register')); return; }
+  root.appendChild(renderApp());
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+async function boot() {
+  render(); // show loading spinner
+
+  // Check if backend is up
+  state.apiOnline = await checkApiHealth();
+
+  const token = loadToken();
+  if (!token) { setState({ view: 'login' }); return; }
+
+  // Try restoring session from JWT
+  state.token = token;
+  try {
+    const [meData, tasksData] = await Promise.all([
+      apiFetch('/auth/me'),
+      apiFetch('/tasks'),
+    ]);
+    setState({ view: 'app', user: meData.user, tasks: tasksData.tasks });
+  } catch {
+    // Token invalid or expired
+    clearToken();
+    setState({ view: 'login', token: null });
+  }
+}
+
+boot();
+</script>
+</body>
+</html>
