@@ -2,9 +2,9 @@
 
 A full-stack task management application with JWT authentication, built as part of a frontend assignment submission.
 
-🔗 **Live Frontend:** [https://your-app.netlify.app](https://your-app.netlify.app) ← replace after deploying  
-🔗 **Live Backend:** [https://your-api.railway.app](https://your-api.railway.app) ← replace after deploying  
-📁 **GitHub:** [https://github.com/YOUR_USERNAME/taskflow](https://github.com/YOUR_USERNAME/taskflow)
+🔗 **Live Frontend:** http://melodious-clafoutis-302fe2.netlify.app  
+🔗 **Live Backend:** [https://your-api.railway.app](https://your-api.railway.app)
+📁 **GitHub:** [https://github.com/Vishal-M66/taskflow]
 
 ---
 
